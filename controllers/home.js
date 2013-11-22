@@ -1,12 +1,36 @@
 module.exports = function(app) {
+
+	var Usuario = app.models.usuario;
+	
 	var HomeController = {
 		index: function(req, res) {
 			res.render('home/index');
 		},
 		login: function(req, res) {
-			var email = req.body.usuario.email;
-			var nome  = req.body.usuario.nome;
-			if(email && nome) {
+			var query = {email: req.body.usuario.email};
+			Usuario.findOne(query)
+				   .select('nome email')
+				   .exec(function (err, usuario){
+				   		if (usuario){
+				   			req.session.usuario = usuario;
+				   			res.redirect('/contatos');
+				   		}else{
+				   			Usuario.create(req.body.usuario, function (err, usuario){
+				   				if (err){
+				   					res.redirect('/');
+				   				}else{
+				   					req.session.usuario = usuario;
+				   					res.redirect('/contatos');
+				   				}
+				   			});
+				   		}
+
+				   });
+
+
+			var email = req.body.usuario.email
+			   , nome = req.body.usuario.nome;
+			if(email && nome) {				
 				var usuario = req.body.usuario;
 				usuario['contatos'] = [];
 				req.session.usuario = usuario;
